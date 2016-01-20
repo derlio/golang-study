@@ -10,16 +10,16 @@ In this article we attempt to clarify things by explaining how reflection works 
 
 Because reflection builds on the type system, let's start with a refresher about types in Go.
 
-Go is statically typed. Every variable has a static type, that is, exactly one type known and fixed at compile time: int, float32, \*MyType, []byte, and so on. If we declare
+Go is statically typed. Every variable has a static type, that is, exactly one type known and fixed at compile time: `int, float32, \*MyType, []byte`, and so on. If we declare
 ```  
 type MyInt int
 
 var i int
 var j MyInt
 ```
-then i has type int and j has type MyInt. The variables i and j have distinct static types and, although they have the same underlying type, they cannot be assigned to one another without a conversion.
+then `i` has type `int` and `j` has type `MyInt`. The variables `i` and `j` have distinct static types and, although they have the same underlying type, they cannot be assigned to one another without a conversion.
 
-One important category of type is interface types, which represent fixed sets of methods. An interface variable can store any concrete (non-interface) value as long as that value implements the interface's methods. A well-known pair of examples is io.Reader and io.Writer, the types Reader and Writer from the [io package](http://golang.org/pkg/io/):
+One important category of type is interface types, which represent fixed sets of methods. An interface variable can store any concrete (non-interface) value as long as that value implements the interface's methods. A well-known pair of examples is `io.Reader` and `io.Writer`, the types Reader and Writer from the [io package](http://golang.org/pkg/io/):
 ```
 //Reader is the interface that wraps the basic Read method.
 type Reader interface {
@@ -31,7 +31,7 @@ type Writer interface {
     Write(p []byte) (n int, err error)
 }
 ```
-Any type that implements a Read (or Write) method with this signature is said to implement io.Reader (or io.Writer). For the purposes of this discussion, that means that a variable of type io.Reader can hold any value whose type has a Read method:
+Any type that implements a Read (or Write) method with this signature is said to implement `io.Reader` (or `io.Writer`). For the purposes of this discussion, that means that a variable of type `io.Reader` can hold any value whose type has a Read method:
 ```
 var r io.Reader
 r = os.Stdin
@@ -39,7 +39,7 @@ r = bufio.NewReader(r)
 r = new(bytes.Buffer)
 //and so on
 ```
-It's important to be clear that whatever concrete value r may hold, `r`'s type is always io.Reader: Go is statically typed and the static type of r is io.Reader.
+It's important to be clear that whatever concrete value `r` may hold, `r`'s type is always `io.Reader`: Go is statically typed and the static type of `r` is `io.Reader`.
 
 An extremely important example of an interface type is the empty interface:
 ```
@@ -55,7 +55,7 @@ We need to be precise about all this because reflection and interfaces are close
 
 Russ Cox has written a [detailed blog post](http://research.swtch.com/2009/12/go-data-structures-interfaces.html) about the representation of interface values in Go. It's not necessary to repeat the full story here, but a simplified summary is in order.
 
-A variable of interface type stores a pair: the concrete value assigned to the variable, and that value's type descriptor. To be more precise, the value is the underlying concrete data item that implements the interface and the type describes the full type of that item. For instance, after
+A variable of interface type stores a pair: **the concrete value assigned to the variable, and that value's type descriptor**. To be more precise, the value is the underlying concrete data item that implements the interface and the type describes the full type of that item. For instance, after
 ```
 var r io.Reader
 tty, err := os.OpenFile("/dev/tty", os.0_RDWR, 0)
@@ -64,12 +64,12 @@ if err != nil {
 }
 r = tty
 ```
-r contains, schematically, the (value, type) pair, (tty, \*os.File). Notice that the type \*os.File implements methods other than Read; even though the interface value provides access only to the Read method, the value inside carries all the type information about that value. That's why we can do things like this:
+`r` contains, schematically, the (value, type) pair, (tty, \*os.File). Notice that the type `\*os.File` implements methods other than Read; even though the interface value provides access only to the Read method, the value inside carries all the type information about that value. That's why we can do things like this:
 ```
 var w io.Writer
 w = r.(io.Writer)
 ```
-The expression in this assignment is a type assertion; what it asserts is that the item inside r also implements io.Writer, and so we can assign it to w. After the assignment, w will contain the pair (tty, \*os.File). That's the same pair as was held in r. The static type of the interface determines what methods may be invoked with an interface variable, even though the concrete value inside may have a larger set of methods.
+The expression in this assignment is a type assertion; what it asserts is that the item inside `r` also implements `io.Writer`, and so we can assign it to `w`. After the assignment, `w` will contain the pair (tty, \*os.File). That's the same pair as was held in `r`. The static type of the interface determines what methods may be invoked with an interface variable, even though the concrete value inside may have a larger set of methods.
 
 Continuing, we can do this:
 ```
@@ -80,14 +80,14 @@ and our empty interface value empty will again contain that same pair, (tty, \*o
 
 (We don't need a type assertion here because it's known statically that w satisfies the empty interface. In the example where we moved a value from a Reader to a Writer, we needed to be explicit and use a type assertion because `Writer`'s methods are not a subset of `Reader`'s.)
 
-One important detail is that the pair inside an interface always has the form (value, concrete type) and cannot have the form (value, interface type). Interfaces do not hold interface values.
+One important detail is that the pair inside an interface always has the form **(value, concrete type)** and cannot have the form (value, interface type). Interfaces do not hold interface values.
 
 Now we're ready to reflect.
 
 ### The first law of reflection
 #### 1. Reflection goes from interface value to reflection object
 
-At the basic level, reflection is just a mechanism to examine the type and value pair stored inside an interface variable. To get started, there are two types we need to know about in [package reflect](http://golang.org/pkg/reflect/): [Type](http://golang.org/pkg/reflect/#Type) and [Value](http://golang.org/pkg/reflect/#Value). Those two types give access to the contents of an interface variable, and two simple functions, called reflect.TypeOf and reflect.ValueOf, retrieve reflect.Type and reflect.Value pieces out of an interface value. (Also, from the reflect.Value it's easy to get to the reflect.Type, but let's keep the Value and Type concepts separate for now.)
+At the basic level, reflection is just a mechanism to examine the type and value pair stored inside an interface variable. To get started, there are two types we need to know about in [package reflect](http://golang.org/pkg/reflect/): [Type](http://golang.org/pkg/reflect/#Type) and [Value](http://golang.org/pkg/reflect/#Value). Those two types give access to the contents of an interface variable, and two simple functions, called `reflect.TypeOf` and `reflect.ValueOf`, retrieve `reflect.Type` and `reflect.Value` pieces out of an interface value. (Also, from the `reflect.Value` it's easy to get to the `reflect.Type`, but let's keep the Value and Type concepts separate for now.)
 
 Let's start with TypeOf:
 ```
@@ -107,12 +107,12 @@ This program prints
 ```
 type:float64
 ```
-You might be wondering where the interface is here, since the program looks like it's passing the float64 variable x, not an interface value, to reflect.TypeOf. But it's there; as godoc reports, the signature of reflect.TypeOf includes an empty interface:
+You might be wondering where the interface is here, since the program looks like it's passing the `float64` variable x, not an interface value, to reflect.TypeOf. But it's there; as godoc reports, the signature of `reflect.TypeOf` includes an empty interface:
 ```
 // TypeOf returns the reflection Type of the value in the interface{}.
 func TypeOf(i interface{}) Type
 ```
-When we call reflect.TypeOf(x), x is first stored in an empty interface, which is then passed as the argument; reflect.TypeOf unpacks that empty interface to recover the type information.
+When we call `reflect.TypeOf(x)`, x is first stored in an empty interface, which is then passed as the argument; `reflect.TypeOf` unpacks that empty interface to recover the type information.
 
 The `reflect.ValueOf` function, of course, recovers the value (from here on we'll elide the boilerplate and focus just on the executable code):
 ```
@@ -123,7 +123,7 @@ prints
 ```
 value:<float64 value>
 ```
-Both reflect.Type and reflect.Value have lots of methods to let us examine and manipulate them. One important example is that Value has a Type method that returns the Type of a reflect.Value. Another is that both Type and Value have a Kind method that returns a constant indicating what sort of item is stored: Uint, Float64, Slice, and so on. Also methods on Value with names like Int and Float let us grab values (as int64 and float64) stored inside:
+Both `reflect.Type` and `reflect.Value` have lots of methods to let us examine and manipulate them. One important example is that Value has a Type method that returns the Type of a `reflect.Value`. Another is that both Type and Value have a Kind method that returns a constant indicating what sort of item is stored: Uint, Float64, Slice, and so on. Also methods on Value with names like Int and Float let us grab values (as int64 and float64) stored inside:
 ```
 var x float64 = 3.4
 v := reflect.ValueOf(x)
@@ -137,7 +137,7 @@ type: float64
 kind is float64: true
 value: 3.4
 ```
-There are also methods like SetInt and SetFloat but to use them we need to understand settability, the subject of the third law of reflection, discussed below.
+There are also methods like `SetInt` and `SetFloat` but to use them we need to understand settability, the subject of the third law of reflection, discussed below.
 
 The reflection library has a couple of properties worth singling out. First, to keep the API simple, the "getter" and "setter" methods of Value operate on the largest type that can hold the value: int64 for all the signed integers, for instance. That is, the Int method of Value returns an int64 and the SetInt value takes an int64; it may be necessary to convert to the actual type involved:
 ```
@@ -181,11 +181,11 @@ fmt.Println(y)
 ```
 to print the float64 value represented by the reflection object v.
 
-We can do even better, though. The arguments to fmt.Println, fmt.Printf and so on are all passed as empty interface values, which are then unpacked by the fmt package internally just as we have been doing in the previous examples. Therefore all it takes to print the contents of a reflect.Value correctly is to pass the result of the Interface method to the formatted print routine:
+We can do even better, though. The arguments to `fmt.Println`, `fmt.Printf` and so on are all passed as empty interface values, which are then unpacked by the fmt package internally just as we have been doing in the previous examples. Therefore all it takes to print the contents of a reflect.Value correctly is to pass the result of the Interface method to the formatted print routine:
 ```
 fmt.Println(v.Interface())
 ```
-(Why not fmt.Println(v)? Because v is a reflect.Value; we want the concrete value it holds.) Since our value is a float64, we can even use a floating-point format if we want:
+(Why not fmt.Println(v)? Because `v` is a `reflect.Value`; we want the concrete value it holds.) Since our value is a `float64`, we can even use a floating-point format if we want:
 ```
 fmt.Printf("value is %7.1e\n", v.Interface())
 ```
@@ -193,7 +193,7 @@ and get in this case
 ```
 3.4e+00
 ```
-Again, there's no need to type-assert the result of v.Interface() to float64; the empty interface value has the concrete value's type information inside and Printf will recover it.
+Again, there's no need to type-assert the result of `v.Interface()` to `float64`; the empty interface value has the concrete value's type information inside and Printf will recover it.
 
 Reiterating: Reflection goes from interface values to reflection objects and back again.
 
@@ -224,30 +224,30 @@ prints
 ```
 settability of v: false
 ```
-It is an error to call a Set method on an non-settable Value. *But what is settability?*
+It is an error to call a Set method on an non-settable Value. **But what is settability?**
 
 Settability is a bit like addressability, but stricter. It's the property that a reflection object can modify the actual storage that was used to create the reflection object. Settability is determined by whether the reflection object holds the original item. When we say
 ```
 var x float64 = 3.4
 v := reflect.ValueOf(x)
 ```
-we pass a copy of x to reflect.ValueOf, so the interface value created as the argument to reflect.ValueOf is a copy of x, not x itself. Thus, if the statement
+we pass a copy of `x` to `reflect.ValueOf`, so the interface value created as the argument to `reflect.ValueOf` is a copy of `x`, not `x` itself. Thus, if the statement
 ```
 v.SetFloat(7.1)
 ```
-were allowed to succeed, it would not update x, even though v looks like it was created from x. Instead, it would update the copy of x stored inside the reflection value and x itself would be unaffected. That would be confusing and useless, so it is illegal, and settability is the property used to avoid this issue.
+were allowed to succeed, it would not update `x`, even though `v` looks like it was created from `x`. Instead, it would update the copy of `x` stored inside the reflection value and `x` itself would be unaffected. That would be confusing and useless, so it is illegal, and settability is the property used to avoid this issue.
 
 If this seems bizarre, it's not. It's actually a familiar situation in unusual garb. Think of passing x to a function:
 ```
 f(x)
 ```
-We would not expect f to be able to modify x because we passed a copy of `x`'s value, not x itself. If we want f to modify x directly we must pass our function the address of x (that is, a pointer to x):
+We would not expect f to be able to modify x because we passed a copy of `x`'s value, not x itself. If we want f to modify `x` directly we must pass our function the address of x (that is, a pointer to x):
 ```
 f(&x)
 ```
 This is straightforward and familiar, and reflection works the same way. If we want to modify x by reflection, we must give the reflection library a pointer to the value we want to modify.
 
-Let's do that. First we initialize x as usual and then create a reflection value that points to it, called p.
+Let's do that. First we initialize `x` as usual and then create a reflection value that points to it, called p.
 ```
 var x float64 = 3.4
 p := reflect.ValueOf(&x) // Note: take the address of x.
@@ -259,7 +259,7 @@ The output so far is
 type of p: *float64
 settability of p: false
 ```
-The reflection object p isn't settable, but it's not p we want to set, it's (in effect) \*p. To get to what p points to, we call the Elem method of Value, which indirects through the pointer, and save the result in a reflection Value called v:
+The reflection object `p` isn't settable, but it's not `p` we want to set, it's (in effect) `\*p`. To get to what p points to, we call the `Elem` method of Value, which indirects through the pointer, and save the result in a reflection Value called v:
 ```
 v := p.Elem() //panic: reflect: call of reflect.Value.Elem on float64 Value
 fmt.Println("settability of v:", v.CanSet())
@@ -285,7 +285,7 @@ Reflection can be hard to understand but it's doing exactly what the language do
 
 In our previous example v wasn't a pointer itself, it was just derived from one. A common way for this situation to arise is when using reflection to modify the fields of a structure. As long as we have the address of the structure, we can modify its fields.
 
-Here's a simple example that analyzes a struct value, t. We create the reflection object with the address of the struct because we'll want to modify it later. Then we set `typeOfT` to its type and iterate over the fields using straightforward method calls (see package reflect for details). Note that we extract the names of the fields from the struct type, but the fields themselves are regular reflect.Value objects.
+Here's a simple example that analyzes a struct value, `t`. We create the reflection object with the address of the struct because we'll want to modify it later. Then we set `typeOfT` to its type and iterate over the fields using straightforward method calls (see package reflect for details). Note that we extract the names of the fields from the struct type, but the fields themselves are regular `reflect.Value` objects.
 ```
 type T struct {
     A int
