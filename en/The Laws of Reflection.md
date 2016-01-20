@@ -10,7 +10,7 @@ In this article we attempt to clarify things by explaining how reflection works 
 
 Because reflection builds on the type system, let's start with a refresher about types in Go.
 
-Go is statically typed. Every variable has a static type, that is, exactly one type known and fixed at compile time: `int, float32, \*MyType, []byte`, and so on. If we declare
+Go is statically typed. Every variable has a static type, that is, exactly one type known and fixed at compile time: `int, float32, *MyType, []byte`, and so on. If we declare
 ```  
 type MyInt int
 
@@ -64,7 +64,7 @@ if err != nil {
 }
 r = tty
 ```
-`r` contains, schematically, the (value, type) pair, (tty, \*os.File). Notice that the type `\*os.File` implements methods other than Read; even though the interface value provides access only to the Read method, the value inside carries all the type information about that value. That's why we can do things like this:
+`r` contains, schematically, the (value, type) pair, (tty, \*os.File). Notice that the type `*os.File` implements methods other than Read; even though the interface value provides access only to the Read method, the value inside carries all the type information about that value. That's why we can do things like this:
 ```
 var w io.Writer
 w = r.(io.Writer)
@@ -76,7 +76,7 @@ Continuing, we can do this:
 var empty interface{}
 empty = w
 ```
-and our empty interface value empty will again contain that same pair, (tty, \*os.File). That's handy: an empty interface can hold any value and contains all the information we could ever need about that value.
+and our empty interface value empty will again contain that same pair, `(tty, *os.File)`. That's handy: an empty interface can hold any value and contains all the information we could ever need about that value.
 
 (We don't need a type assertion here because it's known statically that w satisfies the empty interface. In the example where we moved a value from a Reader to a Writer, we needed to be explicit and use a type assertion because `Writer`'s methods are not a subset of `Reader`'s.)
 
@@ -259,7 +259,7 @@ The output so far is
 type of p: *float64
 settability of p: false
 ```
-The reflection object `p` isn't settable, but it's not `p` we want to set, it's (in effect) `\*p`. To get to what p points to, we call the `Elem` method of Value, which indirects through the pointer, and save the result in a reflection Value called v:
+The reflection object `p` isn't settable, but it's not `p` we want to set, it's (in effect) `*p`. To get to what p points to, we call the `Elem` method of Value, which indirects through the pointer, and save the result in a reflection Value called v:
 ```
 v := p.Elem() //panic: reflect: call of reflect.Value.Elem on float64 Value
 fmt.Println("settability of v:", v.CanSet())
