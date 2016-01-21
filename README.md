@@ -3,3 +3,4 @@
 
 English version:  
 1. [The Laws of Reflection.md](https://github.com/derlio/golang-study/blob/master/en/The%20Laws%20of%20Reflection.md)
+2. [Go's Declaration Syntax.md](https://github.com/derlio/golang-study/blob/master/en/Go's%20Declaration%20Syntax.md)
