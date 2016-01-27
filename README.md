@@ -4,5 +4,5 @@
 English version:  
 1. [The Laws of Reflection.md](https://github.com/derlio/golang-study/blob/master/en/The%20Laws%20of%20Reflection.md)  
 2. [Go's Declaration Syntax.md](https://github.com/derlio/golang-study/blob/master/en/Go's%20Declaration%20Syntax.md)  
-3. [Defer Panic and Recover.md](https://github.com/derlio/golang-study/blob/master/en/Defer%20Panic%20and%20Recover.md)
+3. [Defer Panic and Recover.md](https://github.com/derlio/golang-study/blob/master/en/Defer%20Panic%20and%20Recover.md)  
 4. [Go Concurrency Patterns: Timing out, moving on.md](https://github.com/derlio/golang-study/blob/master/en/Go%20Concurrency%20Patterns:%20Timing%20out%2C%20moving%20on.md)
